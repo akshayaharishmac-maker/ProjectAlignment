@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <title>Question Paper Aligner</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #1a1a2e; font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script type="text/babel" data-presets="react">
+const { useState, useRef } = React;
+
+
+
+const SCHOOL_LOGO = "data:image/jpeg;base64,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";
+
+const COLORS = {
+  bg: "#0f0f13",
+  surface: "#1a1a24",
+  surfaceHigh: "#22223a",
+  border: "#2a2a3a",
+  accent: "#6c63ff",
+  accentLight: "#8b85ff",
+  success: "#22d3a5",
+  warn: "#f59e0b",
+  error: "#f87171",
+  text: "#e8e8f0",
+  muted: "#6b6b8a",
+};
+
+const S = {
+  app: { minHeight: "100vh", background: COLORS.bg, color: COLORS.text, fontFamily: "'DM Sans','Segoe UI',sans-serif" },
+  appBar: {
+    background: "linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)",
+    borderBottom: `1px solid ${COLORS.border}`,
+    padding: "20px 40px", display: "flex", alignItems: "center", gap: 16,
+  },
+  appIcon: {
+    width: 46, height: 46, borderRadius: 12, fontSize: 20,
+    background: `linear-gradient(135deg,${COLORS.accent},${COLORS.accentLight})`,
+    display: "flex", alignItems: "center", justifyContent: "center",
+  },
+  main: { maxWidth: 1140, margin: "0 auto", padding: "32px 24px" },
+  sectionLabel: {
+    fontSize: 11, fontWeight: 700, letterSpacing: 1.5,
+    textTransform: "uppercase", color: COLORS.muted, marginBottom: 12,
+    display: "flex", alignItems: "center", gap: 8,
+  },
+  card: { background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 16, padding: 24, marginBottom: 20 },
+  inputGrid: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginTop: 16 },
+  inputWrap: { display: "flex", flexDirection: "column", gap: 6 },
+  inputLabel: { fontSize: 12, fontWeight: 600, color: COLORS.muted },
+  input: (focused) => ({
+    background: COLORS.surfaceHigh, border: `1px solid ${focused ? COLORS.accent : COLORS.border}`,
+    borderRadius: 9, padding: "10px 14px", color: COLORS.text, fontSize: 14, outline: "none", width: "100%",
+    boxShadow: focused ? `0 0 0 3px ${COLORS.accent}20` : "none", transition: "all 0.2s",
+  }),
+  fileGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 },
+  dropzone: (active, hasFile) => ({
+    border: `2px dashed ${active ? COLORS.accent : hasFile ? COLORS.success : COLORS.border}`,
+    borderRadius: 12, padding: "28px 20px", textAlign: "center", cursor: "pointer",
+    transition: "all 0.2s",
+    background: active ? `${COLORS.accent}10` : hasFile ? `${COLORS.success}10` : "transparent",
+  }),
+  btn: (variant = "primary", disabled = false) => ({
+    padding: "12px 32px", borderRadius: 10, border: "none",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: 700, fontSize: 15, transition: "all 0.2s", opacity: disabled ? 0.45 : 1,
+    background: variant === "primary" ? `linear-gradient(135deg,${COLORS.accent},${COLORS.accentLight})` : COLORS.surfaceHigh,
+    color: COLORS.text,
+    boxShadow: variant === "primary" && !disabled ? `0 4px 24px ${COLORS.accent}45` : "none",
+  }),
+  tab: (active) => ({
+    padding: "8px 18px", borderRadius: 8, border: "none", cursor: "pointer",
+    background: active ? COLORS.accent : "transparent",
+    color: active ? "#fff" : COLORS.muted, fontSize: 13, fontWeight: 500, transition: "all 0.2s",
+  }),
+  badge: (color) => ({
+    display: "inline-flex", alignItems: "center",
+    background: `${color}20`, color, border: `1px solid ${color}40`,
+    borderRadius: 20, padding: "2px 10px", fontSize: 12, fontWeight: 500,
+  }),
+  analysisRow: {
+    display: "flex", alignItems: "flex-start", gap: 12,
+    padding: "14px 16px", borderRadius: 10, marginBottom: 10,
+    border: `1px solid ${COLORS.border}`, background: "#ffffff05",
+  },
+  dot: (color) => ({ width: 10, height: 10, borderRadius: "50%", background: color, marginTop: 4, flexShrink: 0 }),
+  scoreCircle: (score) => ({
+    width: 72, height: 72, borderRadius: "50%",
+    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+    background: score >= 80 ? `${COLORS.success}20` : score >= 50 ? `${COLORS.warn}20` : `${COLORS.error}20`,
+    border: `3px solid ${score >= 80 ? COLORS.success : score >= 50 ? COLORS.warn : COLORS.error}`,
+  }),
+  alignedDocBox: {
+    background: "#ffffff", borderRadius: 12, padding: "0",
+    fontFamily: "'Georgia',serif", fontSize: 13, lineHeight: 1.8,
+    color: "#111", maxHeight: 560, overflowY: "auto",
+  },
+  loader: { display: "flex", flexDirection: "column", alignItems: "center", padding: "44px 0", gap: 14 },
+  spinner: {
+    width: 44, height: 44, borderRadius: "50%",
+    border: `3px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.accent}`,
+    animation: "spin 0.8s linear infinite",
+  },
+};
+
+const STEPS = [
+  "Parsing uploaded document...",
+  "Extracting section structure...",
+  "Analysing question numbering...",
+  "Checking marks distribution...",
+  "Comparing with sample template...",
+  "Generating aligned document...",
+];
+
+// ── EXACT HEADER matching the PDF box layout ──────────────────────────────
+function PaperHeader({ info }) {
+  return (
+    <div style={{
+      background: "#fff",
+      border: "2px solid #111",
+      borderRadius: 4,
+      color: "#111",
+      overflow: "hidden",
+      position: "relative",
+    }}>
+      {/* Live badge */}
+      <div style={{
+        position: "absolute", top: 6, right: 8,
+        background: `${COLORS.accent}20`, color: COLORS.accentLight,
+        border: `1px solid ${COLORS.accent}40`,
+        borderRadius: 20, padding: "1px 9px", fontSize: 10, fontWeight: 700, zIndex: 2,
+      }}>⚡ Live Preview</div>
+
+      {/* Three-column header — no inner borders */}
+      <div style={{ display: "grid", gridTemplateColumns: "170px 1fr 210px" }}>
+
+        {/* LEFT: GRADE + DATE */}
+        <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 10 }}>
+          <div style={{ fontFamily: "Arial, sans-serif", fontSize: 13, fontWeight: 400 }}>
+            <span style={{ fontWeight: 700 }}>GRADE</span>&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;{info.grade || ""}
+          </div>
+          <div style={{ fontFamily: "Arial, sans-serif", fontSize: 13, fontWeight: 400 }}>
+            <span style={{ fontWeight: 700 }}>DATE</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;&nbsp;{info.date || ""}
+          </div>
+        </div>
+
+        {/* CENTRE: Logo + italic school name + bold exam title + subject */}
+        <div style={{ padding: "10px 16px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, textAlign: "center" }}>
+          <img src={SCHOOL_LOGO} alt="Adwaith" style={{ height: 50, objectFit: "contain", marginBottom: 3 }} />
+          <div style={{
+            fontFamily: "'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif",
+            fontStyle: "italic", fontSize: 13.5, fontWeight: 700, letterSpacing: 0.2, color: "#111"
+          }}>
+            CBSE- Sr. Sec. School, Cbe-28
+          </div>
+          <div style={{
+            fontFamily: "Arial, sans-serif", fontWeight: 800, fontSize: 14,
+            letterSpacing: 0.4, marginTop: 3, textTransform: "uppercase"
+          }}>
+            {info.examTitle || "TERM (I) – EXAMINATION"}
+          </div>
+          <div style={{ fontFamily: "Arial, sans-serif", fontWeight: 700, fontSize: 13, marginTop: 1 }}>
+            {info.subject || "TAMIL II PAPER"}
+          </div>
+        </div>
+
+        {/* RIGHT: DURATION + MAX MARKS */}
+        <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", justifyContent: "center", gap: 10 }}>
+          <div style={{ fontFamily: "Arial, sans-serif", fontSize: 13, fontWeight: 400 }}>
+            <span style={{ fontWeight: 700 }}>DURATION</span>&nbsp;:&nbsp;&nbsp;{info.duration || ""}
+          </div>
+          <div style={{ fontFamily: "Arial, sans-serif", fontSize: 13, fontWeight: 400 }}>
+            <span style={{ fontWeight: 700 }}>MAX. MARKS</span>&nbsp;:&nbsp;{info.maxMarks || ""}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function FileDropZone({ label, icon, file, onFile }) {
+  const [drag, setDrag] = useState(false);
+  const ref = useRef();
+  const handle = (f) => { if (f && (f.name.endsWith(".pdf") || f.name.endsWith(".docx"))) onFile(f); };
+  return (
+    <div>
+      <div style={S.sectionLabel}>{icon} {label}</div>
+      <div
+        style={S.dropzone(drag, !!file)}
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => { e.preventDefault(); setDrag(false); handle(e.dataTransfer.files[0]); }}
+        onClick={() => ref.current.click()}
+      >
+        <div style={{ fontSize: 30, marginBottom: 8 }}>{file ? "📄" : "☁️"}</div>
+        {file ? (
+          <><div style={{ fontSize: 14, fontWeight: 600 }}>{file.name}</div>
+            <div style={{ fontSize: 12, color: COLORS.success, marginTop: 6, fontWeight: 600 }}>✓ Ready</div></>
+        ) : (
+          <><div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4 }}>Drop here or click to browse</div>
+            <div style={{ fontSize: 12, color: COLORS.muted }}>PDF or DOCX</div></>
+        )}
+        <input ref={ref} type="file" accept=".pdf,.docx" style={{ display: "none" }} onChange={(e) => handle(e.target.files[0])} />
+      </div>
+    </div>
+  );
+}
+
+function Loader({ stepIdx }) {
+  return (
+    <div style={S.loader}>
+      <div style={S.spinner} />
+      <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.accentLight }}>Aligning document...</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+        {STEPS.map((step, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: i < stepIdx ? COLORS.success : i === stepIdx ? COLORS.accentLight : COLORS.muted }}>
+            <span>{i < stepIdx ? "✓" : i === stepIdx ? "⟳" : "○"}</span>{step}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  // ── Exam types with built-in defaults ──
+  const DEFAULT_EXAM_TYPES = [
+    { id: "periodic", label: "Periodic Test", examTitle: "PERIODIC TEST", maxMarks: "40", duration: "1½ hrs", sample: null },
+    { id: "term1", label: "Term I Exam", examTitle: "TERM (I) – EXAMINATION", maxMarks: "80", duration: "3 hours", sample: null },
+    { id: "term2", label: "Term II Exam", examTitle: "TERM (II) – EXAMINATION", maxMarks: "80", duration: "3 hours", sample: null },
+    { id: "halfyearly", label: "Half Yearly", examTitle: "HALF YEARLY EXAMINATION", maxMarks: "100", duration: "3 hours", sample: null },
+    { id: "annual", label: "Annual Exam", examTitle: "ANNUAL EXAMINATION", maxMarks: "100", duration: "3 hours", sample: null },
+    { id: "unittest", label: "Unit Test", examTitle: "UNIT TEST", maxMarks: "25", duration: "1 hour", sample: null },
+    { id: "others", label: "Others", examTitle: "", maxMarks: "", duration: "", sample: null },
+  ];
+
+  const [examTypes, setExamTypes] = useState(DEFAULT_EXAM_TYPES);
+  const [selectedExamId, setSelectedExamId] = useState("term1");
+  const [showAdmin, setShowAdmin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [adminError, setAdminError] = useState("");
+  const [uploadingSampleFor, setUploadingSampleFor] = useState(null);
+  const sampleRef = useRef();
+
+  const selectedExam = examTypes.find(e => e.id === selectedExamId) || examTypes[0];
+
+  // Load saved exam types from storage on mount
+  const loadSamples = async () => {
+    try {
+      const saved = await window.storage.get("examTypes");
+      if (saved) setExamTypes(JSON.parse(saved.value));
+    } catch {}
+  };
+  const saveSamples = async (types) => {
+    try { await window.storage.set("examTypes", JSON.stringify(types)); } catch {}
+  };
+
+  useState(() => { loadSamples(); }, []);
+
+  const handleSampleUpload = (examId, file) => {
+    if (!file) return;
+    const r = new FileReader();
+    r.onload = async () => {
+      const updated = examTypes.map(e =>
+        e.id === examId ? { ...e, sample: { name: file.name, content: r.result } } : e
+      );
+      setExamTypes(updated);
+      await saveSamples(updated);
+      setUploadingSampleFor(null);
+    };
+    r.readAsText(file);
+  };
+
+  const [info, setInfo] = useState({
+    grade: "", date: "", duration: "", maxMarks: "",
+    examTitle: "TERM (I) – EXAMINATION",
+    subject: "TAMIL II PAPER",
+  });
+
+  // Auto-fill header when exam type changes
+  const handleExamTypeChange = (id) => {
+    setSelectedExamId(id);
+    const exam = examTypes.find(e => e.id === id);
+    if (exam) {
+      setInfo(prev => ({
+        ...prev,
+        examTitle: exam.examTitle,
+        maxMarks: exam.maxMarks,
+        duration: exam.duration,
+      }));
+    }
+    setResult(null);
+  };
+  const [focused, setFocused] = useState(null);
+  const [templateFile, setTemplateFile] = useState(null);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [stepIdx, setStepIdx] = useState(0);
+  const [result, setResult] = useState(null);
+  const [activeTab, setActiveTab] = useState("issues");
+  const [error, setError] = useState(null);
+
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [apiKey, setApiKey] = useState("AIzaSyDy8rQka5qF5Fhyxj9Hyjn1wVOgei4dvk8");
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [screenshot, setScreenshot] = useState(null);
+  const screenshotRef = useRef();
+
+  const getCurrentContext = () => {
+    const step = result ? "Viewing Results" : uploadFile ? "Document Uploaded — Ready to Align" : "Setting up Header";
+    const fileInfo = uploadFile ? `File: ${uploadFile.name}` : "No file uploaded yet";
+    const headerInfo = `Grade: ${info.grade || "—"} | Date: ${info.date || "—"} | Duration: ${info.duration || "—"} | Max Marks: ${info.maxMarks || "—"}`;
+    const resultInfo = result ? `Alignment Score: ${result.alignmentScore}/100 | Issues found: ${result.issues?.length || 0} | Active tab: ${activeTab}` : "No alignment run yet";
+    const errorInfo = error ? `Last error: ${error}` : "";
+    return { step, fileInfo, headerInfo, resultInfo, errorInfo };
+  };
+
+  const sendFeedback = () => {
+    const ctx = getCurrentContext();
+    const msg = `🔴 *Issue Report — Question Paper Aligner*
+
+📍 *Where:* ${ctx.step}
+📄 *${ctx.fileInfo}*
+🏫 *Header:* ${ctx.headerInfo}
+📊 *Result:* ${ctx.resultInfo}${ctx.errorInfo ? `\n⚠️ *${ctx.errorInfo}*` : ""}
+
+💬 *Message:*
+${feedbackText || "(no message — check voice note)"}`;
+
+    const encoded = encodeURIComponent(msg);
+    window.open(`https://wa.me/919551853925?text=${encoded}`, "_blank");
+    setShowFeedback(false);
+    setFeedbackText("");
+    setScreenshot(null);
+  };
+
+
+
+  const setField = (key) => (e) => setInfo(prev => ({ ...prev, [key]: e.target.value }));
+
+  const readAsBase64 = (file) => new Promise((res, rej) => {
+    const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(file);
+  });
+
+  const readDocxAsText = (file) => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = async () => {
+      try {
+        const result = await mammoth.extractRawText({ arrayBuffer: r.result });
+        res(result.value);
+      } catch { rej(new Error("Could not read DOCX")); }
+    };
+    r.onerror = rej;
+    r.readAsArrayBuffer(file);
+  });
+
+  const buildHeaderText = () =>
+    `CBSE- Sr. Sec. School, Cbe-28
+${info.examTitle || "TERM (I) – EXAMINATION"}
+${info.subject || "TAMIL II PAPER"}
+GRADE: ${info.grade || "—"}   DATE: ${info.date || "—"}   DURATION: ${info.duration || "—"}   MAX. MARKS: ${info.maxMarks || "—"}
+${"─".repeat(70)}`;
+
+  const buildPrompt = (documentContent) => {
+    const sampleNote = selectedExam?.sample
+      ? `Saved sample pattern for ${selectedExam.label}: ${selectedExam.sample.content?.slice(0, 600) || ""}`
+      : `No custom sample for ${selectedExam?.label}. Use standard CBSE Tamil structure.`;
+
+    return `You are a document formatter. Your ONLY job is to fix STRUCTURE and FORMATTING.
+
+⚠️ ABSOLUTE RULE: Copy every Tamil word, sentence, question, passage, and option EXACTLY as-is from the input. Do NOT change, replace, paraphrase, summarise, or omit even one character. Output must be 100% identical content — only formatting/structure changes.
+
+EXAM TYPE: ${selectedExam?.label}
+${sampleNote}
+
+INPUT DOCUMENT — copy all content verbatim:
+${documentContent}
+
+FORMATTING FIXES TO APPLY (structure only):
+1. Remove header block (school/grade/date/marks at top)
+2. Section titles in order: பகுதி - அ / பகுதி - ஆ / பகுதி - இ / பகுதி – ஈ
+3. Roman numeral question set numbers: I. II. III. IV. V. VI. VII. VIII. IX. X. XI.
+4. Marks notation at end of each set instruction e.g. 5x1=5
+5. MCQ options அ. ஆ. இ. ஈ. all on ONE line
+6. Sub-sections in III labelled அ. ஆ. இ. ஈ.
+7. Exactly ONE blank line between question sets. No double blank lines.
+8. Start output with பகுதி - அ — no header.
+
+Respond in this exact format:
+{"alignmentScore": <0-100>, "issues": [{"category": "Section Structure", "severity": "high", "title": "<title>", "description": "<desc>", "fix": "<fix>"}], "summary": "<2-3 sentences>"}
+<alignedDocument>
+[paste the complete verbatim content here with only structure fixed, starting with பகுதி - அ]
+</alignedDocument>`;
+  };
+
+  const runAlignment = async () => {
+    if (!uploadFile) return;
+    setLoading(true); setResult(null); setError(null); setStepIdx(0);
+    for (let i = 1; i <= STEPS.length; i++) { await new Promise(r => setTimeout(r, 580)); setStepIdx(i); }
+    try {
+      const isPDF = uploadFile.name.toLowerCase().endsWith(".pdf");
+      const isDOCX = uploadFile.name.toLowerCase().endsWith(".docx");
+
+      let messageContent;
+
+      if (isPDF) {
+        const b64 = await readAsBase64(uploadFile);
+        messageContent = buildPrompt("[See attached PDF — extract all Tamil text verbatim]") + "
+
+[PDF attached as base64 — please read it]";
+        // For Gemini, send PDF as inline_data
+        const geminiBody = {
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: "application/pdf", data: b64 } },
+              { text: buildPrompt("[See attached PDF document — extract all text verbatim]") }
+            ]
+          }],
+          generationConfig: { maxOutputTokens: 8000 }
+        };
+        const pdfRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDy8rQka5qF5Fhyxj9Hyjn1wVOgei4dvk8`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(geminiBody),
+        });
+        const pdfData = await pdfRes.json();
+        if (pdfData.error) throw new Error(pdfData.error?.message || JSON.stringify(pdfData.error));
+        const pdfText = pdfData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        if (!pdfText) throw new Error("Empty response from Gemini for PDF");
+        // Parse the response directly
+        const pdfAligned = pdfText.match(/<alignedDocument>([\s\S]*?)<\/alignedDocument>/)?.[1]?.trim() || "";
+        const pdfScore = parseInt(pdfText.match(/"score"\s*:\s*(\d+)/)?.[1] || "0");
+        const pdfIssues = [];
+        const pdfIssueMatches = pdfText.matchAll(/"([^"]+)"/g);
+        const pdfSummary = pdfText.match(/"summary"\s*:\s*"([^"]+)"/) ?.[1] || "Alignment complete";
+        setResult({ alignedDocument: pdfAligned || pdfText, score: pdfScore, issues: pdfIssues, summary: pdfSummary });
+        setLoading(false);
+        return;
+      } else if (isDOCX) {
+        const text = await readDocxAsText(uploadFile);
+        if (!text || text.trim().length < 20) throw new Error("Could not extract text from DOCX. Please try saving as PDF first.");
+        messageContent = [{ type: "text", text: buildPrompt(text) }];
+      } else {
+        throw new Error("Please upload a PDF or DOCX file.");
+      }
+
+      const geminiKey = "AIzaSyDy8rQka5qF5Fhyxj9Hyjn1wVOgei4dvk8";
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: typeof messageContent === "string" ? messageContent : messageContent.map(m => typeof m === "string" ? m : (m.text || JSON.stringify(m))).join("
+") }] }], generationConfig: { maxOutputTokens: 8000 } }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error?.message || JSON.stringify(data.error));
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      if (!text) throw new Error("Empty response from Gemini");
+
+      // Extract aligned document from XML tag first (avoids JSON corruption from Tamil quotes/newlines)
+      const docMatch = text.match(/<alignedDocument>([\s\S]*?)<\/alignedDocument>/);
+      const alignedDocument = docMatch ? docMatch[1].trim() : "";
+
+      // Parse the JSON metadata part (without the large document field)
+      const jsonMatch = text.match(/\{[\s\S]*?"summary"\s*:\s*"([\s\S]*?)"\s*[,}]/);
+      const summaryMatch = text.match(/"summary"\s*:\s*"([^"]+)"/);
+      const scoreMatch = text.match(/"alignmentScore"\s*:\s*(\d+)/);
+      const issuesMatch = text.match(/"issues"\s*:\s*(\[[\s\S]*?\])/);
+
+      let issues = [];
+      try { issues = JSON.parse(issuesMatch?.[1] || "[]"); } catch { issues = []; }
+
+      const parsed = {
+        alignmentScore: parseInt(scoreMatch?.[1] || "75"),
+        issues,
+        summary: summaryMatch?.[1] || "Document aligned successfully.",
+        alignedDocument: alignedDocument || text,
+      };
+
+      setResult(parsed); setActiveTab("issues");
+    } catch (e) {
+      setError("Error: " + (e.message || "Unknown error. Please try again."));
+    }
+    setLoading(false);
+  };
+
+  const sevColor = (s) => s === "high" ? COLORS.error : s === "medium" ? COLORS.warn : COLORS.success;
+  const catIcon = (c) => ({ "Question Numbering": "🔢", "Marks Distribution": "📊", "Section Structure": "📋", "Font & Formatting": "🖋️" }[c] || "📌");
+
+  return (
+    <div style={S.app}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}*{box-sizing:border-box}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:${COLORS.bg}}::-webkit-scrollbar-thumb{background:${COLORS.border};border-radius:3px}input::placeholder{color:${COLORS.muted}}`}</style>
+
+      <div style={S.appBar}>
+        <div style={S.appIcon}>📐</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5 }}>Question Paper Aligner</div>
+          <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>CBSE Tamil Question Paper · AI-powered alignment · Live header preview</div>
+        </div>
+        <button onClick={() => setShowKeyInput(true)} style={{ background: apiKey ? "#ffffff15" : "#ff4757", border: "1px solid " + (apiKey ? COLORS.border : "#ff4757"), borderRadius: 10, color: apiKey ? COLORS.muted : "#fff", padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, marginRight: 8 }}>{apiKey ? "🔑 Key Set" : "🔑 Set API Key"}</button>
+        <button onClick={() => setShowFeedback(true)} style={{
+          background: "#ff4757", border: "none", borderRadius: 10,
+          color: "#fff", padding: "10px 18px", cursor: "pointer",
+          fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 8,
+          boxShadow: "0 4px 16px #ff475740",
+        }}>🐛 Report Issue</button>
+      </div>
+
+      {/* ── FEEDBACK MODAL ── */}
+      
+      {showKeyInput && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2000, padding:20 }}>
+          <div style={{ background:COLORS.surface, border:"1px solid "+COLORS.border, borderRadius:18, padding:28, width:"100%", maxWidth:440 }}>
+            <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>🔑 Anthropic API Key</div>
+            <div style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>Saved only in this browser. Get it from <b>aistudio.google.com</b></div>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." style={{ width:"100%", padding:"10px 14px", borderRadius:9, border:"1px solid "+COLORS.border, background:COLORS.surfaceHigh, color:COLORS.text, fontSize:13, outline:"none", marginBottom:14 }} />
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={() => setShowKeyInput(false)} style={{ flex:1, padding:"10px 0", borderRadius:9, border:"1px solid "+COLORS.border, background:"transparent", color:COLORS.muted, cursor:"pointer", fontWeight:600 }}>Cancel</button>
+              <button onClick={() => { localStorage.setItem("qpa_api_key", apiKey); setShowKeyInput(false); }} style={{ flex:2, padding:"10px 0", borderRadius:9, border:"none", background:COLORS.accent, color:"#fff", cursor:"pointer", fontWeight:700 }}>Save Key</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFeedback && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 1000, padding: 20,
+        }}>
+          <div style={{
+            background: COLORS.surface, border: `1px solid ${COLORS.border}`,
+            borderRadius: 18, padding: 28, width: "100%", maxWidth: 480,
+          }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>🐛 Report an Issue</div>
+            <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 18 }}>
+              This will open WhatsApp with your current screen context pre-filled. You can type or send a voice note!
+            </div>
+
+            {/* Auto-captured context preview */}
+            {(() => {
+              const ctx = getCurrentContext();
+              return (
+                <div style={{ background: "#ffffff08", border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: 14, marginBottom: 16, fontSize: 12, color: COLORS.muted, lineHeight: 1.7 }}>
+                  <div style={{ fontWeight: 700, color: COLORS.accentLight, marginBottom: 6 }}>📍 Auto-captured context:</div>
+                  <div>🔵 <b>Step:</b> {ctx.step}</div>
+                  <div>📄 <b>{ctx.fileInfo}</b></div>
+                  <div>🏫 <b>Header:</b> {ctx.headerInfo}</div>
+                  <div>📊 <b>{ctx.resultInfo}</b></div>
+                  {ctx.errorInfo && <div>⚠️ <b>{ctx.errorInfo}</b></div>}
+                </div>
+              );
+            })()}
+
+            {/* Optional text */}
+            <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 6, fontWeight: 600 }}>
+              Describe the issue (optional — you can also send a voice note in WhatsApp):
+            </div>
+            <textarea
+              value={feedbackText}
+              onChange={e => setFeedbackText(e.target.value)}
+              placeholder="e.g. The aligned document shows wrong section order..."
+              style={{
+                width: "100%", minHeight: 90, background: COLORS.surfaceHigh,
+                border: `1px solid ${COLORS.border}`, borderRadius: 9,
+                padding: "10px 14px", color: COLORS.text, fontSize: 13,
+                resize: "vertical", outline: "none", fontFamily: "inherit",
+              }}
+            />
+
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button onClick={() => { setShowFeedback(false); setFeedbackText(""); }} style={{
+                flex: 1, padding: "11px 0", borderRadius: 9, border: `1px solid ${COLORS.border}`,
+                background: "transparent", color: COLORS.muted, cursor: "pointer", fontWeight: 600, fontSize: 14,
+              }}>Cancel</button>
+              <button onClick={sendFeedback} style={{
+                flex: 2, padding: "11px 0", borderRadius: 9, border: "none",
+                background: "#25D366", color: "#fff", cursor: "pointer",
+                fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}>
+                <span style={{ fontSize: 18 }}>📲</span> Open WhatsApp & Send
+              </button>
+            </div>
+            <div style={{ fontSize: 11, color: COLORS.muted, textAlign: "center", marginTop: 10 }}>
+              After WhatsApp opens, you can also 🎙️ record a voice note instead of typing
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={S.main}>
+
+        {/* ── EXAM TYPE SELECTOR ── */}
+        <div style={S.card}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={S.sectionLabel}>📋 Step 0 — Select Exam Type</div>
+            <button onClick={() => setShowAdmin(true)} style={{
+              background: "transparent", border: `1px solid ${COLORS.border}`,
+              borderRadius: 8, color: COLORS.muted, padding: "5px 12px",
+              cursor: "pointer", fontSize: 12, fontWeight: 600,
+            }}>⚙️ Manage Samples</button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {examTypes.map(e => (
+              <button key={e.id} onClick={() => handleExamTypeChange(e.id)} style={{
+                padding: "9px 18px", borderRadius: 10, border: `2px solid ${selectedExamId === e.id ? COLORS.accent : COLORS.border}`,
+                background: selectedExamId === e.id ? `${COLORS.accent}20` : "transparent",
+                color: selectedExamId === e.id ? COLORS.accentLight : COLORS.muted,
+                cursor: "pointer", fontWeight: 600, fontSize: 13, transition: "all 0.2s",
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+                {e.label}
+                {e.sample && <span style={{ fontSize: 10, background: COLORS.success + "30", color: COLORS.success, borderRadius: 10, padding: "1px 6px" }}>✓ Sample</span>}
+              </button>
+            ))}
+          </div>
+          {selectedExam && !selectedExam.sample && (
+            <div style={{ fontSize: 11, color: COLORS.warn, marginTop: 10 }}>
+              ⚠️ No sample uploaded for "{selectedExam.label}" — default CBSE structure will be used. Upload a sample via ⚙️ Manage Samples.
+            </div>
+          )}
+        </div>
+
+        {/* ── ADMIN PANEL MODAL ── */}
+        {showAdmin && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+            <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 18, padding: 28, width: "100%", maxWidth: 520, maxHeight: "85vh", overflowY: "auto" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>⚙️ Manage Exam Samples</div>
+                <button onClick={() => { setShowAdmin(false); setAdminUnlocked(false); setAdminPassword(""); setAdminError(""); }} style={{ background: "transparent", border: "none", color: COLORS.muted, cursor: "pointer", fontSize: 20 }}>✕</button>
+              </div>
+
+              {!adminUnlocked ? (
+                <div>
+                  <div style={{ fontSize: 13, color: COLORS.muted, marginBottom: 14 }}>Enter admin password to manage samples.</div>
+                  <input
+                    type="password" value={adminPassword}
+                    onChange={e => setAdminPassword(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") { if (adminPassword === "adwaith123") { setAdminUnlocked(true); setAdminError(""); } else setAdminError("Wrong password"); } }}
+                    placeholder="Enter password"
+                    style={{ ...S.input(true), marginBottom: 8 }}
+                  />
+                  {adminError && <div style={{ color: COLORS.error, fontSize: 12 }}>{adminError}</div>}
+                  <button onClick={() => { if (adminPassword === "adwaith123") { setAdminUnlocked(true); setAdminError(""); } else setAdminError("Wrong password"); }}
+                    style={{ ...S.btn("primary"), marginTop: 10, width: "100%", padding: "10px 0" }}>Unlock</button>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 16 }}>Upload a sample question paper for each exam type. This will be used as the fixed alignment pattern.</div>
+                  {examTypes.map(e => (
+                    <div key={e.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 10, border: `1px solid ${COLORS.border}`, marginBottom: 10, background: "#ffffff05" }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{e.label}</div>
+                        <div style={{ fontSize: 11, color: e.sample ? COLORS.success : COLORS.muted, marginTop: 2 }}>
+                          {e.sample ? `✓ Sample: ${e.sample.name}` : "No sample uploaded"}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {e.sample && (
+                          <button onClick={async () => {
+                            const updated = examTypes.map(t => t.id === e.id ? { ...t, sample: null } : t);
+                            setExamTypes(updated); await saveSamples(updated);
+                          }} style={{ background: `${COLORS.error}20`, border: `1px solid ${COLORS.error}40`, color: COLORS.error, borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 12 }}>Remove</button>
+                        )}
+                        <button onClick={() => { setUploadingSampleFor(e.id); sampleRef.current.click(); }} style={{
+                          background: `${COLORS.accent}20`, border: `1px solid ${COLORS.accent}40`,
+                          color: COLORS.accentLight, borderRadius: 8, padding: "5px 12px",
+                          cursor: "pointer", fontSize: 12, fontWeight: 600,
+                        }}>{e.sample ? "Replace" : "Upload"}</button>
+                      </div>
+                    </div>
+                  ))}
+                  <input ref={sampleRef} type="file" accept=".pdf,.docx,.txt" style={{ display: "none" }}
+                    onChange={e => { if (uploadingSampleFor) handleSampleUpload(uploadingSampleFor, e.target.files[0]); e.target.value = ""; }} />
+                  <div style={{ fontSize: 11, color: COLORS.muted, textAlign: "center", marginTop: 8 }}>Samples are saved permanently in this browser.</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        <div style={S.card}>
+          <div style={S.sectionLabel}>🏫 Step 1 — Paper Header</div>
+
+          <PaperHeader info={info} />
+
+          <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 10, marginBottom: 4, textAlign: "center" }}>
+            Logo & school name are fixed · Fill in the fields below to update Grade, Date, Duration and Marks
+          </div>
+
+          <div style={S.inputGrid}>
+            <div style={S.inputWrap}>
+              <label style={S.inputLabel}>Grade</label>
+              <input style={S.input(focused === "grade")} value={info.grade}
+                placeholder="e.g. X or VII"
+                onFocus={() => setFocused("grade")} onBlur={() => setFocused(null)}
+                onChange={setField("grade")} />
+            </div>
+            <div style={S.inputWrap}>
+              <label style={S.inputLabel}>Date</label>
+              <input style={S.input(focused === "date")} value={info.date}
+                placeholder="e.g. 29.8.2025"
+                onFocus={() => setFocused("date")} onBlur={() => setFocused(null)}
+                onChange={setField("date")} />
+            </div>
+            <div style={S.inputWrap}>
+              <label style={S.inputLabel}>Duration</label>
+              <input style={S.input(focused === "duration")} value={info.duration}
+                placeholder="e.g. 3 hours"
+                onFocus={() => setFocused("duration")} onBlur={() => setFocused(null)}
+                onChange={setField("duration")} />
+            </div>
+            <div style={S.inputWrap}>
+              <label style={S.inputLabel}>Max. Marks</label>
+              <input style={S.input(focused === "maxMarks")} value={info.maxMarks}
+                placeholder="e.g. 80"
+                onFocus={() => setFocused("maxMarks")} onBlur={() => setFocused(null)}
+                onChange={setField("maxMarks")} />
+            </div>
+            <div style={{ ...S.inputWrap, gridColumn: "1 / 3" }}>
+              <label style={S.inputLabel}>Exam Title</label>
+              <input style={S.input(focused === "examTitle")} value={info.examTitle}
+                placeholder="e.g. TERM (I) – EXAMINATION"
+                onFocus={() => setFocused("examTitle")} onBlur={() => setFocused(null)}
+                onChange={setField("examTitle")} />
+            </div>
+            <div style={{ ...S.inputWrap, gridColumn: "3 / 5" }}>
+              <label style={S.inputLabel}>Subject</label>
+              <input style={S.input(focused === "subject")} value={info.subject}
+                placeholder="e.g. TAMIL II PAPER"
+                onFocus={() => setFocused("subject")} onBlur={() => setFocused(null)}
+                onChange={setField("subject")} />
+            </div>
+          </div>
+        </div>
+
+        {/* ── STEP 2: FILES ── */}
+        <div style={S.card}>
+          <div style={S.sectionLabel}>📂 Step 2 — Upload Paper to Align</div>
+          <div style={{ marginBottom: 20 }}>
+            <FileDropZone label="Upload Question Paper (PDF or DOCX)" icon="📄" file={uploadFile} onFile={setUploadFile} />
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <button style={S.btn("primary", !uploadFile || loading)}
+              disabled={!uploadFile || loading} onClick={runAlignment}>
+              {loading ? "Aligning..." : "⚡ Align Document"}
+            </button>
+            {!uploadFile && (
+              <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 10 }}>Upload a paper to begin alignment</div>
+            )}
+          </div>
+        </div>
+
+        {error && <div style={{ ...S.card, borderColor: COLORS.error, color: COLORS.error, textAlign: "center" }}>⚠️ {error}</div>}
+        {loading && <div style={S.card}><Loader stepIdx={stepIdx} /></div>}
+
+        {/* ── RESULT ── */}
+        {result && !loading && (
+          <div style={S.card}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Alignment Report</div>
+                <div style={{ fontSize: 13, color: COLORS.muted, maxWidth: 600 }}>{result.summary}</div>
+              </div>
+              <div style={S.scoreCircle(result.alignmentScore)}>
+                <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1, color: result.alignmentScore >= 80 ? COLORS.success : result.alignmentScore >= 50 ? COLORS.warn : COLORS.error }}>{result.alignmentScore}</div>
+                <div style={{ fontSize: 10, color: COLORS.muted, marginTop: 2 }}>SCORE</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+              {["issues", "aligned"].map(t => (
+                <button key={t} style={S.tab(activeTab === t)} onClick={() => setActiveTab(t)}>
+                  {t === "issues" ? `⚠️ Issues (${result.issues?.length || 0})` : "✅ Aligned Document"}
+                </button>
+              ))}
+            </div>
+
+            {activeTab === "issues" && (
+              result.issues?.length === 0
+                ? <div style={{ textAlign: "center", padding: 32, color: COLORS.success }}>✅ Perfectly aligned!</div>
+                : result.issues?.map((issue, i) => (
+                  <div key={i} style={S.analysisRow}>
+                    <div style={S.dot(sevColor(issue.severity))} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                        <span>{catIcon(issue.category)}</span>
+                        <span style={{ fontWeight: 600, fontSize: 14 }}>{issue.title}</span>
+                        <span style={S.badge(sevColor(issue.severity))}>{issue.severity}</span>
+                        <span style={S.badge(COLORS.muted)}>{issue.category}</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.5 }}>{issue.description}</div>
+                      {issue.fix && <div style={{ fontSize: 12, color: COLORS.accentLight, marginTop: 6 }}>🔧 Fix: {issue.fix}</div>}
+                    </div>
+                  </div>
+                ))
+            )}
+
+            {activeTab === "aligned" && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, color: COLORS.muted }}>Corrected paper with your fixed header</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button style={S.btn("secondary")} onClick={() => {
+                      const fullText = buildHeaderText() + "\n\n" + result.alignedDocument;
+                      navigator.clipboard.writeText(fullText).then(() => {
+                        alert("✅ Copied to clipboard! Paste into Word or Notes to save.");
+                      }).catch(() => {
+                        alert("Could not copy. Please select all text in the preview and copy manually.");
+                      });
+                    }}>📋 Copy Text</button>
+                    <button style={S.btn("secondary")} onClick={() => {
+                      const fullText = buildHeaderText() + "\n\n" + result.alignedDocument;
+                      const w = window.open("", "_blank");
+                      w.document.write("<pre style='font-family:Times New Roman,serif;font-size:13px;line-height:1.6;padding:32px;white-space:pre-wrap'>" + fullText.replace(/</g,"&lt;").replace(/>/g,"&gt;") + "</pre>");
+                      w.document.title = "Aligned Paper";
+                      w.document.close();
+                    }}>🖨️ Open to Print/Save</button>
+                  </div>
+                </div>
+                <div style={S.alignedDocBox}>
+                  <PaperHeader info={info} />
+                  <div style={{ padding: "20px 28px", fontFamily: "'Times New Roman', serif", fontSize: 12, lineHeight: 1.5, color: "#111" }}>
+                    {result.alignedDocument
+                      .split("\n")
+                      .reduce((acc, line) => {
+                        if (line.trim() === "" && acc.length > 0 && acc[acc.length - 1] === "") return acc;
+                        return [...acc, line.trim() === "" ? "" : line];
+                      }, [])
+                      .map((line, i) => {
+                        const isSectionHeader = /^பகுதி\s*[-–]/.test(line.trim());
+                        const isQHeader = /^(I{1,3}|IV|VI{0,3}|IX|X[I]{0,2})\b/.test(line.trim());
+                        if (line === "") return <div key={i} style={{ height: 5 }} />;
+                        return (
+                          <div key={i} style={{
+                            fontWeight: isSectionHeader || isQHeader ? 700 : 400,
+                            lineHeight: 1.55,
+                          }}>{line}</div>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+</body>
+</html>
