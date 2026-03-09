@@ -141,7 +141,7 @@ function PaperHeader({ info }) {
         borderRadius: 20, padding: "1px 9px", fontSize: 10, fontWeight: 700, zIndex: 2,
       }}>⚡ Live Preview</div>
 
-      {/* Three-column header — no inner borders */}
+      {/* Three-column header - no inner borders */}
       <div style={{ display: "grid", gridTemplateColumns: "170px 1fr 210px" }}>
 
         {/* LEFT: GRADE + DATE */}
@@ -320,9 +320,9 @@ function App() {
   const screenshotRef = useRef();
 
   const getCurrentContext = () => {
-    const step = result ? "Viewing Results" : uploadFile ? "Document Uploaded — Ready to Align" : "Setting up Header";
+    const step = result ? "Viewing Results" : uploadFile ? "Document Uploaded - Ready to Align" : "Setting up Header";
     const fileInfo = uploadFile ? `File: ${uploadFile.name}` : "No file uploaded yet";
-    const headerInfo = `Grade: ${info.grade || "—"} | Date: ${info.date || "—"} | Duration: ${info.duration || "—"} | Max Marks: ${info.maxMarks || "—"}`;
+    const headerInfo = `Grade: ${info.grade || "-"} | Date: ${info.date || "-"} | Duration: ${info.duration || "-"} | Max Marks: ${info.maxMarks || "-"}`;
     const resultInfo = result ? `Alignment Score: ${result.alignmentScore}/100 | Issues found: ${result.issues?.length || 0} | Active tab: ${activeTab}` : "No alignment run yet";
     const errorInfo = error ? `Last error: ${error}` : "";
     return { step, fileInfo, headerInfo, resultInfo, errorInfo };
@@ -330,7 +330,7 @@ function App() {
 
   const sendFeedback = () => {
     const ctx = getCurrentContext();
-    const msg = `🔴 *Issue Report — Question Paper Aligner*
+    const msg = `🔴 *Issue Report - Question Paper Aligner*
 
 📍 *Where:* ${ctx.step}
 📄 *${ctx.fileInfo}*
@@ -338,7 +338,7 @@ function App() {
 📊 *Result:* ${ctx.resultInfo}${ctx.errorInfo ? `\n⚠️ *${ctx.errorInfo}*` : ""}
 
 💬 *Message:*
-${feedbackText || "(no message — check voice note)"}`;
+${feedbackText || "(no message - check voice note)"}`;
 
     const encoded = encodeURIComponent(msg);
     window.open(`https://wa.me/919551853925?text=${encoded}`, "_blank");
@@ -371,7 +371,7 @@ ${feedbackText || "(no message — check voice note)"}`;
     `CBSE- Sr. Sec. School, Cbe-28
 ${info.examTitle || "TERM (I) – EXAMINATION"}
 ${info.subject || "TAMIL II PAPER"}
-GRADE: ${info.grade || "—"}   DATE: ${info.date || "—"}   DURATION: ${info.duration || "—"}   MAX. MARKS: ${info.maxMarks || "—"}
+GRADE: ${info.grade || "-"}   DATE: ${info.date || "-"}   DURATION: ${info.duration || "-"}   MAX. MARKS: ${info.maxMarks || "-"}
 ${"─".repeat(70)}`;
 
   const buildPrompt = (documentContent) => {
@@ -381,12 +381,12 @@ ${"─".repeat(70)}`;
 
     return `You are a document formatter. Your ONLY job is to fix STRUCTURE and FORMATTING.
 
-⚠️ ABSOLUTE RULE: Copy every Tamil word, sentence, question, passage, and option EXACTLY as-is from the input. Do NOT change, replace, paraphrase, summarise, or omit even one character. Output must be 100% identical content — only formatting/structure changes.
+⚠️ ABSOLUTE RULE: Copy every Tamil word, sentence, question, passage, and option EXACTLY as-is from the input. Do NOT change, replace, paraphrase, summarise, or omit even one character. Output must be 100% identical content - only formatting/structure changes.
 
 EXAM TYPE: ${selectedExam?.label}
 ${sampleNote}
 
-INPUT DOCUMENT — copy all content verbatim:
+INPUT DOCUMENT - copy all content verbatim:
 ${documentContent}
 
 FORMATTING FIXES TO APPLY (structure only):
@@ -397,7 +397,7 @@ FORMATTING FIXES TO APPLY (structure only):
 5. MCQ options அ. ஆ. இ. ஈ. all on ONE line
 6. Sub-sections in III labelled அ. ஆ. இ. ஈ.
 7. Exactly ONE blank line between question sets. No double blank lines.
-8. Start output with பகுதி - அ — no header.
+8. Start output with பகுதி - அ - no header.
 
 Respond in this exact format:
 {"alignmentScore": <0-100>, "issues": [{"category": "Section Structure", "severity": "high", "title": "<title>", "description": "<desc>", "fix": "<fix>"}], "summary": "<2-3 sentences>"}
@@ -418,15 +418,15 @@ Respond in this exact format:
 
       if (isPDF) {
         const b64 = await readAsBase64(uploadFile);
-        messageContent = buildPrompt("[See attached PDF — extract all Tamil text verbatim]") + "
+        messageContent = buildPrompt("[See attached PDF - extract all Tamil text verbatim]") + "
 
-[PDF attached as base64 — please read it]";
+[PDF attached as base64 - please read it]";
         // For Gemini, send PDF as inline_data
         const geminiBody = {
           contents: [{
             parts: [
               { inline_data: { mime_type: "application/pdf", data: b64 } },
-              { text: buildPrompt("[See attached PDF document — extract all text verbatim]") }
+              { text: buildPrompt("[See attached PDF document - extract all text verbatim]") }
             ]
           }],
           generationConfig: { maxOutputTokens: 8000 }
@@ -566,7 +566,7 @@ Respond in this exact format:
 
             {/* Optional text */}
             <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 6, fontWeight: 600 }}>
-              Describe the issue (optional — you can also send a voice note in WhatsApp):
+              Describe the issue (optional - you can also send a voice note in WhatsApp):
             </div>
             <textarea
               value={feedbackText}
@@ -605,7 +605,7 @@ Respond in this exact format:
         {/* ── EXAM TYPE SELECTOR ── */}
         <div style={S.card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <div style={S.sectionLabel}>📋 Step 0 — Select Exam Type</div>
+            <div style={S.sectionLabel}>📋 Step 0 - Select Exam Type</div>
             <button onClick={() => setShowAdmin(true)} style={{
               background: "transparent", border: `1px solid ${COLORS.border}`,
               borderRadius: 8, color: COLORS.muted, padding: "5px 12px",
@@ -628,7 +628,7 @@ Respond in this exact format:
           </div>
           {selectedExam && !selectedExam.sample && (
             <div style={{ fontSize: 11, color: COLORS.warn, marginTop: 10 }}>
-              ⚠️ No sample uploaded for "{selectedExam.label}" — default CBSE structure will be used. Upload a sample via ⚙️ Manage Samples.
+              ⚠️ No sample uploaded for "{selectedExam.label}" - default CBSE structure will be used. Upload a sample via ⚙️ Manage Samples.
             </div>
           )}
         </div>
@@ -691,7 +691,7 @@ Respond in this exact format:
           </div>
         )}
         <div style={S.card}>
-          <div style={S.sectionLabel}>🏫 Step 1 — Paper Header</div>
+          <div style={S.sectionLabel}>🏫 Step 1 - Paper Header</div>
 
           <PaperHeader info={info} />
 
@@ -747,7 +747,7 @@ Respond in this exact format:
 
         {/* ── STEP 2: FILES ── */}
         <div style={S.card}>
-          <div style={S.sectionLabel}>📂 Step 2 — Upload Paper to Align</div>
+          <div style={S.sectionLabel}>📂 Step 2 - Upload Paper to Align</div>
           <div style={{ marginBottom: 20 }}>
             <FileDropZone label="Upload Question Paper (PDF or DOCX)" icon="📄" file={uploadFile} onFile={setUploadFile} />
           </div>
