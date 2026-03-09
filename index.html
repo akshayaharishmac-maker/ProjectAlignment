@@ -4,10 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
   <title>Question Paper Aligner</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: #1a1a2e; font-family: Arial, sans-serif; }
-  </style>
+  <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { background: #1a1a2e; font-family: Arial, sans-serif; }</style>
 </head>
 <body>
   <div id="root"></div>
@@ -167,7 +164,7 @@ function PaperHeader({ info }) {
             fontFamily: "Arial, sans-serif", fontWeight: 800, fontSize: 14,
             letterSpacing: 0.4, marginTop: 3, textTransform: "uppercase"
           }}>
-            {info.examTitle || "TERM (I) – EXAMINATION"}
+            {info.examTitle || "TERM (I) - EXAMINATION"}
           </div>
           <div style={{ fontFamily: "Arial, sans-serif", fontWeight: 700, fontSize: 13, marginTop: 1 }}>
             {info.subject || "TAMIL II PAPER"}
@@ -237,8 +234,8 @@ function App() {
   // ── Exam types with built-in defaults ──
   const DEFAULT_EXAM_TYPES = [
     { id: "periodic", label: "Periodic Test", examTitle: "PERIODIC TEST", maxMarks: "40", duration: "1½ hrs", sample: null },
-    { id: "term1", label: "Term I Exam", examTitle: "TERM (I) – EXAMINATION", maxMarks: "80", duration: "3 hours", sample: null },
-    { id: "term2", label: "Term II Exam", examTitle: "TERM (II) – EXAMINATION", maxMarks: "80", duration: "3 hours", sample: null },
+    { id: "term1", label: "Term I Exam", examTitle: "TERM (I) - EXAMINATION", maxMarks: "80", duration: "3 hours", sample: null },
+    { id: "term2", label: "Term II Exam", examTitle: "TERM (II) - EXAMINATION", maxMarks: "80", duration: "3 hours", sample: null },
     { id: "halfyearly", label: "Half Yearly", examTitle: "HALF YEARLY EXAMINATION", maxMarks: "100", duration: "3 hours", sample: null },
     { id: "annual", label: "Annual Exam", examTitle: "ANNUAL EXAMINATION", maxMarks: "100", duration: "3 hours", sample: null },
     { id: "unittest", label: "Unit Test", examTitle: "UNIT TEST", maxMarks: "25", duration: "1 hour", sample: null },
@@ -285,7 +282,7 @@ function App() {
 
   const [info, setInfo] = useState({
     grade: "", date: "", duration: "", maxMarks: "",
-    examTitle: "TERM (I) – EXAMINATION",
+    examTitle: "TERM (I) - EXAMINATION",
     subject: "TAMIL II PAPER",
   });
 
@@ -313,8 +310,9 @@ function App() {
   const [error, setError] = useState(null);
 
   const [showFeedback, setShowFeedback] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   const [showKeyInput, setShowKeyInput] = useState(false);
+  const [waNumber, setWaNumber] = useState(() => localStorage.getItem('wa_number') || '');
   const [feedbackText, setFeedbackText] = useState("");
   const [screenshot, setScreenshot] = useState(null);
   const screenshotRef = useRef();
@@ -341,7 +339,7 @@ function App() {
 ${feedbackText || "(no message - check voice note)"}`;
 
     const encoded = encodeURIComponent(msg);
-    window.open(`https://wa.me/919551853925?text=${encoded}`, "_blank");
+    const waNum = localStorage.getItem('wa_number') || ''; window.open(`https://wa.me/${waNum}?text=${encoded}`, '_blank');
     setShowFeedback(false);
     setFeedbackText("");
     setScreenshot(null);
@@ -369,10 +367,9 @@ ${feedbackText || "(no message - check voice note)"}`;
 
   const buildHeaderText = () =>
     `CBSE- Sr. Sec. School, Cbe-28
-${info.examTitle || "TERM (I) – EXAMINATION"}
+${info.examTitle || "TERM (I) - EXAMINATION"}
 ${info.subject || "TAMIL II PAPER"}
-GRADE: ${info.grade || "-"}   DATE: ${info.date || "-"}   DURATION: ${info.duration || "-"}   MAX. MARKS: ${info.maxMarks || "-"}
-${"─".repeat(70)}`;
+GRADE: ${info.grade || "-"}   DATE: ${info.date || "-"}   DURATION: ${info.duration || "-"}   MAX. MARKS: ${info.maxMarks || "-"}`;
 
   const buildPrompt = (documentContent) => {
     const sampleNote = selectedExam?.sample
@@ -391,13 +388,13 @@ ${documentContent}
 
 FORMATTING FIXES TO APPLY (structure only):
 1. Remove header block (school/grade/date/marks at top)
-2. Section titles in order: பகுதி - அ / பகுதி - ஆ / பகுதி - இ / பகுதி – ஈ
+2. Keep section titles ONLY if they exist in original (பகுதி - அ / பகுதி - ஆ / பகுதி - இ / பகுதி - ஈ) - do NOT add them if missing
 3. Roman numeral question set numbers: I. II. III. IV. V. VI. VII. VIII. IX. X. XI.
-4. Marks notation at end of each set instruction e.g. 5x1=5
+4. Marks notation at end of each set instruction exactly as in original e.g. 5x1=5
 5. MCQ options அ. ஆ. இ. ஈ. all on ONE line
-6. Sub-sections in III labelled அ. ஆ. இ. ஈ.
+6. Sub-sections in III labelled அ. ஆ. இ. ஈ. only if they exist
 7. Exactly ONE blank line between question sets. No double blank lines.
-8. Start output with பகுதி - அ - no header.
+8. Do NOT add any content that was not in the original document.
 
 Respond in this exact format:
 {"alignmentScore": <0-100>, "issues": [{"category": "Section Structure", "severity": "high", "title": "<title>", "description": "<desc>", "fix": "<fix>"}], "summary": "<2-3 sentences>"}
@@ -408,6 +405,7 @@ Respond in this exact format:
 
   const runAlignment = async () => {
     if (!uploadFile) return;
+      if (!apiKey) { setShowKeyInput(true); return; }
     setLoading(true); setResult(null); setError(null); setStepIdx(0);
     for (let i = 1; i <= STEPS.length; i++) { await new Promise(r => setTimeout(r, 580)); setStepIdx(i); }
     try {
@@ -418,35 +416,20 @@ Respond in this exact format:
 
       if (isPDF) {
         const b64 = await readAsBase64(uploadFile);
-        messageContent = buildPrompt("[See attached PDF - extract all Tamil text verbatim]") + "
-
-[PDF attached as base64 - please read it]";
-        // For Gemini, send PDF as inline_data
-        const geminiBody = {
-          contents: [{
-            parts: [
-              { inline_data: { mime_type: "application/pdf", data: b64 } },
-              { text: buildPrompt("[See attached PDF document - extract all text verbatim]") }
-            ]
-          }],
-          generationConfig: { maxOutputTokens: 8000 }
-        };
-        const pdfRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+        const pdfRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(geminiBody),
+          body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: "application/pdf", data: b64 } }, { text: buildPrompt("[See attached PDF - extract all Tamil text verbatim and apply formatting fixes]") }] }], generationConfig: { maxOutputTokens: 65536 } }),
         });
         const pdfData = await pdfRes.json();
         if (pdfData.error) throw new Error(pdfData.error?.message || JSON.stringify(pdfData.error));
-        const pdfText = pdfData.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        if (!pdfText) throw new Error("Empty response from Gemini for PDF");
-        // Parse the response directly
-        const pdfAligned = pdfText.match(/<alignedDocument>([\s\S]*?)<\/alignedDocument>/)?.[1]?.trim() || "";
-        const pdfScore = parseInt(pdfText.match(/"score"\s*:\s*(\d+)/)?.[1] || "0");
-        const pdfIssues = [];
-        const pdfIssueMatches = pdfText.matchAll(/"([^"]+)"/g);
-        const pdfSummary = pdfText.match(/"summary"\s*:\s*"([^"]+)"/) ?.[1] || "Alignment complete";
-        setResult({ alignedDocument: pdfAligned || pdfText, score: pdfScore, issues: pdfIssues, summary: pdfSummary });
+        const pdfRaw = pdfData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        if (!pdfRaw) throw new Error("Empty response from Gemini for PDF");
+        const pdfDocMatch = pdfRaw.match(/<alignedDocument>([\s\S]*?)<\/alignedDocument>/);
+        const pdfAligned = pdfDocMatch ? pdfDocMatch[1].trim() : pdfRaw.replace(/```json[\s\S]*?```/g, '').replace(/<\/?alignedDocument>/g, '').replace(/^[\s\S]*?(பகுதி)/, '$1').trim();
+        const pdfScore = parseInt(pdfRaw.match(/"alignmentScore"\s*:\s*(\d+)/)?.[1] || "75");
+        const pdfSummary = pdfRaw.match(/"summary"\s*:\s*"([^"]+)"/)?.[1] || "Alignment complete";
+        setResult({ alignedDocument: pdfAligned, score: pdfScore, issues: [], summary: pdfSummary });
         setLoading(false);
         return;
       } else if (isDOCX) {
@@ -457,12 +440,10 @@ Respond in this exact format:
         throw new Error("Please upload a PDF or DOCX file.");
       }
 
-      const geminiKey = apiKey;
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: typeof messageContent === "string" ? messageContent : messageContent.map(m => typeof m === "string" ? m : (m.text || JSON.stringify(m))).join("
-") }] }], generationConfig: { maxOutputTokens: 8000 } }),
+        body: JSON.stringify({ contents: [{ parts: [{ text: typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent) }] }], generationConfig: { maxOutputTokens: 65536 } }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error?.message || JSON.stringify(data.error));
@@ -471,7 +452,7 @@ Respond in this exact format:
 
       // Extract aligned document from XML tag first (avoids JSON corruption from Tamil quotes/newlines)
       const docMatch = text.match(/<alignedDocument>([\s\S]*?)<\/alignedDocument>/);
-      const alignedDocument = docMatch ? docMatch[1].trim() : "";
+      const alignedDocument = docMatch ? docMatch[1].trim() : text.replace(/```json[\s\S]*?```/g, "").replace(/<\/?alignedDocument>/g, "").replace(/^[\s\S]*?(\u0baa\u0b95\u0bc1\u0ba4\u0bbf)/, "$1").trim();
 
       // Parse the JSON metadata part (without the large document field)
       const jsonMatch = text.match(/\{[\s\S]*?"summary"\s*:\s*"([\s\S]*?)"\s*[,}]/);
@@ -509,7 +490,7 @@ Respond in this exact format:
           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5 }}>Question Paper Aligner</div>
           <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 2 }}>CBSE Tamil Question Paper · AI-powered alignment · Live header preview</div>
         </div>
-        <button onClick={() => setShowKeyInput(true)} style={{ background: apiKey ? "#ffffff15" : "#ff4757", border: "1px solid " + (apiKey ? COLORS.border : "#ff4757"), borderRadius: 10, color: apiKey ? COLORS.muted : "#fff", padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, marginRight: 8 }}>{apiKey ? "🔑 Key Set" : "🔑 Set API Key"}</button>
+        <button onClick={() => setShowKeyInput(true)} style={{ background: apiKey ? 'rgba(255,255,255,0.08)' : '#ff4757', border:'none', borderRadius:10, color:'#fff', padding:'8px 14px', cursor:'pointer', fontSize:12, fontWeight:600, marginRight:8 }}>{apiKey ? '🔑 Key Set' : '🔑 Setup'}</button>
         <button onClick={() => setShowFeedback(true)} style={{
           background: "#ff4757", border: "none", borderRadius: 10,
           color: "#fff", padding: "10px 18px", cursor: "pointer",
@@ -521,14 +502,16 @@ Respond in this exact format:
       {/* ── FEEDBACK MODAL ── */}
       
       {showKeyInput && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2000, padding:20 }}>
-          <div style={{ background:COLORS.surface, border:"1px solid "+COLORS.border, borderRadius:18, padding:28, width:"100%", maxWidth:440 }}>
-            <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>🔑 Gemini API Key</div>
-            <div style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>Saved only in this browser. Get it from <b>aistudio.google.com</b></div>
-            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." style={{ width:"100%", padding:"10px 14px", borderRadius:9, border:"1px solid "+COLORS.border, background:COLORS.surfaceHigh, color:COLORS.text, fontSize:13, outline:"none", marginBottom:14 }} />
-            <div style={{ display:"flex", gap:10 }}>
-              <button onClick={() => setShowKeyInput(false)} style={{ flex:1, padding:"10px 0", borderRadius:9, border:"1px solid "+COLORS.border, background:"transparent", color:COLORS.muted, cursor:"pointer", fontWeight:600 }}>Cancel</button>
-              <button onClick={() => { localStorage.setItem("gemini_api_key", apiKey); setShowKeyInput(false); }} style={{ flex:2, padding:"10px 0", borderRadius:9, border:"none", background:COLORS.accent, color:"#fff", cursor:"pointer", fontWeight:700 }}>Save Key</button>
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:2000, padding:20 }}>
+          <div style={{ background:COLORS.surface, border:'1px solid '+COLORS.border, borderRadius:18, padding:28, width:'100%', maxWidth:440 }}>
+            <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>Setup</div>
+            <div style={{ fontSize:12, color:COLORS.muted, marginBottom:8 }}>Gemini API Key (from aistudio.google.com)</div>
+            <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." style={{ width:'100%', padding:'10px 14px', borderRadius:9, border:'1px solid '+COLORS.border, background:COLORS.surfaceHigh, color:COLORS.text, fontSize:13, outline:'none', marginBottom:14 }} />
+            <div style={{ fontSize:12, color:COLORS.muted, marginBottom:8 }}>WhatsApp number for bug reports (no + prefix)</div>
+            <input type="text" value={waNumber} onChange={e => setWaNumber(e.target.value)} placeholder="91XXXXXXXXXX" style={{ width:'100%', padding:'10px 14px', borderRadius:9, border:'1px solid '+COLORS.border, background:COLORS.surfaceHigh, color:COLORS.text, fontSize:13, outline:'none', marginBottom:14 }} />
+            <div style={{ display:'flex', gap:10 }}>
+              <button onClick={() => setShowKeyInput(false)} style={{ flex:1, padding:'10px 0', borderRadius:9, border:'1px solid '+COLORS.border, background:'transparent', color:COLORS.muted, cursor:'pointer', fontWeight:600 }}>Cancel</button>
+              <button onClick={() => { localStorage.setItem('gemini_api_key', apiKey); localStorage.setItem('wa_number', waNumber); setShowKeyInput(false); }} style={{ flex:2, padding:'10px 0', borderRadius:9, border:'none', background:COLORS.accent, color:'#fff', cursor:'pointer', fontWeight:700 }}>Save</button>
             </div>
           </div>
         </div>
@@ -731,7 +714,7 @@ Respond in this exact format:
             <div style={{ ...S.inputWrap, gridColumn: "1 / 3" }}>
               <label style={S.inputLabel}>Exam Title</label>
               <input style={S.input(focused === "examTitle")} value={info.examTitle}
-                placeholder="e.g. TERM (I) – EXAMINATION"
+                placeholder="e.g. TERM (I) - EXAMINATION"
                 onFocus={() => setFocused("examTitle")} onBlur={() => setFocused(null)}
                 onChange={setField("examTitle")} />
             </div>
@@ -821,10 +804,29 @@ Respond in this exact format:
                       });
                     }}>📋 Copy Text</button>
                     <button style={S.btn("secondary")} onClick={() => {
-                      const fullText = buildHeaderText() + "\n\n" + result.alignedDocument;
                       const w = window.open("", "_blank");
-                      w.document.write("<pre style='font-family:Times New Roman,serif;font-size:13px;line-height:1.6;padding:32px;white-space:pre-wrap'>" + fullText.replace(/</g,"&lt;").replace(/>/g,"&gt;") + "</pre>");
-                      w.document.title = "Aligned Paper";
+                      const bodyLines = result.alignedDocument.split("\n").map(l => {
+                        const safe = l.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                        const isSec = /^பகுதி/.test(l.trim());
+                        const isRoman = /^(I{1,3}|IV|VI{0,3}|IX|X{1,2}I{0,3})\./.test(l.trim());
+                        const marksMatch = l.match(/(.*?)(\d+\s*[xX*]\s*\d+\s*=\s*\d+)\s*$/);
+                        if (isSec) return "<p style='font-weight:bold;margin:12px 0 4px'>" + safe + "</p>";
+                        if (marksMatch) {
+                          const textPart = marksMatch[1].replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                          const marksPart = marksMatch[2].replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+                          const bold = isRoman ? "font-weight:bold;" : "";
+                          return "<p style='" + bold + "display:flex;justify-content:space-between;margin:4px 0'><span>" + textPart + "</span><span>" + marksPart + "</span></p>";
+                        }
+                        if (isRoman) return "<p style='font-weight:bold;margin:8px 0 2px'>" + safe + "</p>";
+                        return "<p style='margin:2px 0'>" + safe + "</p>";
+                      }).join("");
+                      const hdr = "<table style='width:100%;border-collapse:collapse;border:2px solid #000;margin-bottom:20px'><tr>" +
+                        "<td style='width:25%;padding:8px;vertical-align:middle'><b>GRADE: " + (info.grade||"") + "</b><br/>DATE: " + (info.date||"") + "</td>" +
+                        "<td style='width:50%;text-align:center;padding:8px;vertical-align:middle'><img src='" + SCHOOL_LOGO + "' style='height:60px;display:block;margin:0 auto 4px'/><b style='font-style:italic'>CBSE- Sr. Sec. School, Cbe-28</b><br/><b>" + (info.examTitle||"EXAMINATION") + "</b><br/><b>" + (info.subject||"TAMIL") + "</b></td>" +
+                        "<td style='width:25%;padding:8px;vertical-align:middle;text-align:right'><b>DURATION: " + (info.duration||"") + "</b><br/>MAX. MARKS: " + (info.maxMarks||"") + "</td>" +
+                        "</tr></table>";
+                      const styles = "<style>body{font-family:'Times New Roman',serif;font-size:13pt;line-height:1.8;padding:40px 60px;max-width:900px;margin:0 auto}@media print{body{padding:20px 30px}}</style>";
+                      w.document.write("<!DOCTYPE html><html><head><meta charset='utf-8'><title>Aligned Paper</title>" + styles + "</head><body>" + hdr + bodyLines + "</body></html>");
                       w.document.close();
                     }}>🖨️ Open to Print/Save</button>
                   </div>
@@ -839,7 +841,7 @@ Respond in this exact format:
                         return [...acc, line.trim() === "" ? "" : line];
                       }, [])
                       .map((line, i) => {
-                        const isSectionHeader = /^பகுதி\s*[-–]/.test(line.trim());
+                        const isSectionHeader = /^பகுதி\s*[--]/.test(line.trim());
                         const isQHeader = /^(I{1,3}|IV|VI{0,3}|IX|X[I]{0,2})\b/.test(line.trim());
                         if (line === "") return <div key={i} style={{ height: 5 }} />;
                         return (
