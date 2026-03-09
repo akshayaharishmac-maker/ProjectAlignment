@@ -313,7 +313,7 @@ function App() {
   const [error, setError] = useState(null);
 
   const [showFeedback, setShowFeedback] = useState(false);
-  const [apiKey, setApiKey] = useState("AIzaSyDy8rQka5qF5Fhyxj9Hyjn1wVOgei4dvk8");
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [screenshot, setScreenshot] = useState(null);
@@ -431,7 +431,7 @@ Respond in this exact format:
           }],
           generationConfig: { maxOutputTokens: 8000 }
         };
-        const pdfRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDy8rQka5qF5Fhyxj9Hyjn1wVOgei4dvk8`, {
+        const pdfRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(geminiBody),
@@ -457,7 +457,7 @@ Respond in this exact format:
         throw new Error("Please upload a PDF or DOCX file.");
       }
 
-      const geminiKey = "AIzaSyDy8rQka5qF5Fhyxj9Hyjn1wVOgei4dvk8";
+      const geminiKey = apiKey;
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -523,12 +523,12 @@ Respond in this exact format:
       {showKeyInput && (
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:2000, padding:20 }}>
           <div style={{ background:COLORS.surface, border:"1px solid "+COLORS.border, borderRadius:18, padding:28, width:"100%", maxWidth:440 }}>
-            <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>🔑 Anthropic API Key</div>
+            <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>🔑 Gemini API Key</div>
             <div style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>Saved only in this browser. Get it from <b>aistudio.google.com</b></div>
             <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." style={{ width:"100%", padding:"10px 14px", borderRadius:9, border:"1px solid "+COLORS.border, background:COLORS.surfaceHigh, color:COLORS.text, fontSize:13, outline:"none", marginBottom:14 }} />
             <div style={{ display:"flex", gap:10 }}>
               <button onClick={() => setShowKeyInput(false)} style={{ flex:1, padding:"10px 0", borderRadius:9, border:"1px solid "+COLORS.border, background:"transparent", color:COLORS.muted, cursor:"pointer", fontWeight:600 }}>Cancel</button>
-              <button onClick={() => { localStorage.setItem("qpa_api_key", apiKey); setShowKeyInput(false); }} style={{ flex:2, padding:"10px 0", borderRadius:9, border:"none", background:COLORS.accent, color:"#fff", cursor:"pointer", fontWeight:700 }}>Save Key</button>
+              <button onClick={() => { localStorage.setItem("gemini_api_key", apiKey); setShowKeyInput(false); }} style={{ flex:2, padding:"10px 0", borderRadius:9, border:"none", background:COLORS.accent, color:"#fff", cursor:"pointer", fontWeight:700 }}>Save Key</button>
             </div>
           </div>
         </div>
